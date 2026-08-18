@@ -9,3 +9,6 @@ moorea_fish <- read_csv(
   "data/moorea_fish.csv",
   na = c("", "NA", "ND")
 )
+
+glimpse(moorea_fish)
+glimpse(moorea_coral)
