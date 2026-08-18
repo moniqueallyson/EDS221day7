@@ -12,3 +12,7 @@ moorea_fish <- read_csv(
 
 glimpse(moorea_fish)
 glimpse(moorea_coral)
+
+
+non_coral <- c("CTB", "Macroalgae", "Non-coralline Crustose Algae","Unknown or Other")
+#Filter moorea_coral to exclude any row whose Taxonomy_Substrate_or_Functional_Group is in non_coral, and to keep only rows where Depth is less than 17.
