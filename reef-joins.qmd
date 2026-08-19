@@ -14,6 +14,7 @@ execute:
 
 [click here for github link](https://github.com/moniqueallyson/eds221day7) 
 
+## Read data
 ```{r, message=FALSE}
 library(tidyverse) # load tidyverse library
 
@@ -32,12 +33,89 @@ glimpse(moorea_coral) # glimpse moorea coral data
 
 ```
 
+## Defining Non-corals
 ```{r}
-
-
-non_coral <- filter(moorea_coral,
-!c("CTB", "Macroalgae", "Non-coralline Crustose Algae","Unknown or Other") %in% c("depth", "Taxonomy_Substrate_or_Functional_Group")|>
-filter(depth < 17)
+non_coral <- c("Sand", "CTB", "Macroalgae", "Non-coralline Crustose Algae","Unknown or Other") # define non-corals in taxonomy column
 non_coral
+```
 
+## Define Corals
+```{r}
+corals_only <- moorea_coral |> # data is moorea coral
+  filter(
+    !Taxonomy_Substrate_or_Functional_Group %in% non_coral, # exclude taxonomy group that is found in non_coral
+  Depth < 17 # keep rows with depth less than 17
+) |>
+  mutate(Year = as.numeric(str_sub(Date, start = 1, end = 4))) # mutate date format from year-month to just year with 4 digits (ex. 2005)
+
+```
+
+## Summarize Moorea Coral at Quadrant Level then Transect Level
+```{r}
+coral_summary <- corals_only |> # data is moorea coral
+  summarize(
+    quadrant_cover = sum(Percent_Cover, na.rm = TRUE), # quadrat-level percent cover
+    .by = c(Year, Site, Habitat, Depth, Quad40)
+  ) |> 
+  summarize( # transect-level percent cover
+    mean_coral_cover = mean(quadrant_cover), # 
+    .by =  c(Year, Site, Habitat, Depth)
+  ) |> 
+  arrange(Year, Site, Depth)
+
+```
+
+## Create Primary Consumers
+
+```{r}
+primary_consumers <- moorea_fish |> 
+  filter(Coarse_Trophic == "Primary Consumer")
+nrow(moorea_fish)
+nrow(primary_consumers)
+
+```
+
+## Fish Summary
+```{r}
+fish_summary <- primary_consumers |> 
+  summarize(
+    total_biomass = sum(Biomass, na.rm = TRUE),
+    .by = c(Site, Habitat, Year)
+  ) |>
+  arrange(Year, Site, Habitat)
+
+```
+
+## Join Summaries
+```{r}
+reef_joined <- coral_summary |> # data is coral_summary
+  inner_join(fish_summary, by = join_by(Site, Habitat, Year)) # combining the two data frames by site, habitat, and the year
+```
+
+## Reshape
+```{r}
+reef_joined_wide <-reef_joined |> 
+  select(Site, Habitat, Year, mean_coral_cover) |> 
+  pivot_wider(names_from = Habitat, values_from = mean_coral_cover) |> # pivot wider to spread out the habitats
+mutate(coral_cover_difference = Forereef - Fringing) # add a column with the difference between the habitats
+```
+
+## Histogram
+```{r}
+ggplot( # plotting a graph
+  data = reef_joined_wide,
+    mapping = aes(x = coral_cover_difference)
+) +
+  geom_histogram()
+```
+
+## Boxplot
+```{r}
+ggplot(
+  data = reef_joined,
+  mapping = aes(
+    x = mean_coral_cover,
+    y = total_biomass)
+) +
+  geom_point()
 ```
