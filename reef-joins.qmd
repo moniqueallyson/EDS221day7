@@ -14,3 +14,30 @@ execute:
 
 [click here for github link](https://github.com/moniqueallyson/eds221day7) 
 
+```{r, message=FALSE}
+library(tidyverse) # load tidyverse library
+
+moorea_coral <- read_csv( # read csv file
+  "data/moorea_coral.csv",
+  na = c("", "NA", "ND") # This vector tells read_csv() which values to interpret as missing data
+)
+
+moorea_fish <- read_csv( # read csv file
+  "data/moorea_fish.csv",
+  na = c("", "NA", "ND")
+)
+
+glimpse(moorea_fish) # glimpse moorea fish data
+glimpse(moorea_coral) # glimpse moorea coral data
+
+```
+
+```{r}
+
+
+non_coral <- filter(moorea_coral,
+!c("CTB", "Macroalgae", "Non-coralline Crustose Algae","Unknown or Other") %in% c("depth", "Taxonomy_Substrate_or_Functional_Group")|>
+filter(depth < 17)
+non_coral
+
+```

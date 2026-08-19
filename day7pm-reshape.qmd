@@ -1,0 +1,99 @@
+---
+title: "Introduction to Reshape"
+author: 
+    name: "Monique Hernandez"
+    affiliation: University of California, Santa Barbara
+date: "Augustt 18, 2026"
+format:
+  html:
+    toc: true
+execute:
+  message: false
+  warning: false
+---
+## Day 7 PM Live Coding
+
+```{r, message=FALSE}
+library(tidyverse)
+
+surveys <- read_csv("data/surveys.csv") # read data files for surveys
+species <- read_csv("data/species.csv") # read data files for species
+plots <- read_csv("data/plots.csv") # read data files for plots
+
+```
+
+
+# pivot_wider() ----------------------------------------------------------
+
+## Finding weight by sex of species
+```{r}
+weight_by_sex <- surveys |> # new data weight_by_sex
+  filter(!is.na(sex)) |> # filter by sex removing NA
+  summarize( # summarize function, return a new row
+    mean_weight = mean(weight, na.rm = TRUE), # name mean_weight 
+    .by = c(species_id, sex) # by sex of species id
+  )
+```
+
+## Using the pivot wider for new data set
+
+```{r}
+weight_by_sex_wider <- weight_by_sex |> # new data weight_by_sex_wider
+  pivot_wider( # pivot_wider function
+    names_from = sex, # from sex
+    values_from = mean_weight # values from the mean_weight
+  )
+weight_by_sex_wider # call new data
+```
+
+::: {.callout-note}
+## pivot_wider
+pivot_wider is useful when one column contains multiple sets of values that you want to use with each other
+(ex. calculating weight difference between M and F)
+:::
+
+# Another example
+```{r}
+taxa_by_year <- surveys |> # new data for taxa by years
+  filter(year >= 1999) |> # filter by year
+  # This join will add the taxa column from species to my surveys subset
+  inner_join( # join function
+    select(species, species_id, taxa), # select columns
+    join_by(species_id) # join tables
+  ) |>
+  count(year, taxa) # count function 
+taxa_by_year
+```
+
+
+# Pivot this wider, so we have columns for Birds and Rodents
+```{r}
+taxa_by_year_wider <- taxa_by_year |>
+  pivot_wider(
+    names_from = taxa,
+    values_from = n
+  )
+taxa_by_year_wider
+```
+
+# pivot_longer() ---------------------------------------------------------
+
+::: {.callout-note}
+## Inverses
+pivot_wider() and pivot_longer() are inverses of each other
+:::
+```{r}
+taxa_by_year_wider
+```
+
+```{r}
+taxa_by_year_wider|>
+    pivot_longer( # pivot back to long format
+    cols = Rodent:Bird,
+    # where are the names going?
+    names_to = "taxa",
+    # where are the values going?
+    values_to = "n"
+  )
+
+```
